@@ -67,6 +67,7 @@ play.addEventListener('click', async () => {
     window.EJS_gameUrl = romUrl;
     window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
     window.EJS_startOnLoaded = true;
+    window.EJS_voulume = 1;
     window.EJS_onGameStart = () => {
       status.textContent = 'Evento de início recebido. Verifique se a imagem aparece.';
       add('Evento: jogo iniciado (não confirma imagem)');
