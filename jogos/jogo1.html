@@ -2,8 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+
 <meta name="viewport"
 content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <title>Criaverse3D Games - Jogo 1</title>
 
 <style>
@@ -13,45 +15,104 @@ box-sizing: border-box;
 
 body {
 margin: 0;
-background: #101018;
+background: #030816;
 color: white;
 font-family: Arial, sans-serif;
 text-align: center;
 }
 
-h2 {
-margin: 12px;
-font-size: 20px;
+.pagina {
+max-width: 900px;
+margin: auto;
+padding: 12px;
 }
 
-#game {
+/* Logo futurista */
+.logo {
+display: block;
 width: 100%;
-height: 80dvh;
+max-width: 700px;
+height: auto;
+margin: 0 auto 18px;
+}
+
+/* Moldura azul neon */
+.moldura {
+padding: 5px;
+border: 2px solid #00cfff;
+border-radius: 20px;
+box-shadow: 0 0 22px #007bff80;
+overflow: hidden;
+background: black;
+}
+
+/* Emulador */
+#game {
+display: block !important;
+width: 100%;
+height: 65dvh;
 min-height: 350px;
 background: black;
 }
 
 #status {
-padding: 10px;
+padding: 12px;
+color: #76dfff;
 font-size: 14px;
+}
+
+/* Tela cheia sem moldura */
+.moldura:fullscreen {
+padding: 0;
+border: 0;
+border-radius: 0;
+box-shadow: none;
+width: 100vw;
+height: 100dvh;
+}
+
+.moldura:fullscreen #game {
+height: 100%;
+min-height: 0;
+}
+
+:fullscreen {
+border: none !important;
+border-radius: 0 !important;
+box-shadow: none !important;
 }
 </style>
 </head>
 
 <body>
-<h2>Criaverse3D Games</h2>
 
+<main class="pagina">
+
+<!-- Logo Criaverse3D -->
+<img
+class="logo"
+src="../imagens/visual.png"
+alt="Criaverse3D Games"
+>
+
+<!-- Emulador -->
+<section class="moldura">
 <div id="game"></div>
+</section>
+
 <div id="status">Carregando jogo...</div>
+
+</main>
 
 <script>
 window.EJS_player = "#game";
 window.EJS_core = "n64";
 
-// Arquivo do jogo hospedado no seu site
+/* Arquivo do jogo */
 window.EJS_gameUrl = "../roms/jogo1.z64";
 
 window.EJS_gameName = "Jogo 1";
+
 window.EJS_pathtodata =
 "https://cdn.emulatorjs.org/stable/data/";
 
@@ -65,5 +126,6 @@ document.getElementById("status").textContent =
 </script>
 
 <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
 </body>
 </html>
