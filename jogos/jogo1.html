@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Criaverse3D Games - Jogo 1</title>
+
+<style>
+* {
+box-sizing: border-box;
+}
+
+body {
+margin: 0;
+background: #101018;
+color: white;
+font-family: Arial, sans-serif;
+text-align: center;
+}
+
+h2 {
+margin: 12px;
+font-size: 20px;
+}
+
+#game {
+width: 100%;
+height: 80dvh;
+min-height: 350px;
+background: black;
+}
+
+#status {
+padding: 10px;
+font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+<h2>Criaverse3D Games</h2>
+
+<div id="game"></div>
+<div id="status">Carregando jogo...</div>
+
+<script>
+window.EJS_player = "#game";
+window.EJS_core = "n64";
+
+// Arquivo do jogo hospedado no seu site
+window.EJS_gameUrl = "../roms/jogo1.z64";
+
+window.EJS_gameName = "Jogo 1";
+window.EJS_pathtodata =
+"https://cdn.emulatorjs.org/stable/data/";
+
+window.EJS_startOnLoaded = true;
+window.EJS_volume = 1;
+
+window.EJS_onGameStart = function () {
+document.getElementById("status").textContent =
+"Jogo iniciado!";
+};
+</script>
+
+<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+</body>
+</html>
