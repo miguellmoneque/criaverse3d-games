@@ -88,15 +88,19 @@ html, body {
     height: 100dvh;
   }
 }
-  /* Diminuir os círculos X, Y, A e B */
-.ejs_virtualGamepad_button.cs_n64_b_x,
-.ejs_virtualGamepad_button.cs_n64_b_y,
-.ejs_virtualGamepad_button.cs_n64_b_a,
-.ejs_virtualGamepad_button.cs_n64_b_b {
+/* Reduzir os quatro botões do losango */
+#game .ejs_virtualGamepad_button.cs_n64_b_x,
+#game .ejs_virtualGamepad_button.cs_n64_b_y,
+#game .ejs_virtualGamepad_button.cs_n64_b_a,
+#game .ejs_virtualGamepad_button.cs_n64_b_b {
     width: 38px !important;
     height: 38px !important;
     line-height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
     font-size: 11px !important;
+}
 }
 </style>
 </head>
