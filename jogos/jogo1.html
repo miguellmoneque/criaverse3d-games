@@ -1,113 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
-<title>Criaverse3D Games</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Criaverse3D — Nintendo 64</title>
 <style>
-* {
-box-sizing: border-box;
-}
-
-body {
-margin: 0;
-background: #050510;
-color: white;
-font-family: Arial, sans-serif;
-}
-
-.console {
-position: relative;
-width: 100%;
-max-width: 700px;
-margin: 0 auto;
-}
-
-.visual {
-display: block;
-width: 100%;
-height: auto;
-}
-
-/* Tela do jogo sobre a imagem */
-#game {
-position: absolute;
-left: 6%;
-top: 34%;
-width: 88%;
-height: 32%;
-background: black;
-overflow: hidden;
-z-index: 2;
-}
-
-#game canvas,
-#game iframe {
-max-width: 100%;
-}
-
-/* Tela cheia: só o emulador */
-#game:fullscreen {
-position: fixed;
-inset: 0;
-width: 100vw;
-height: 100dvh;
-background: black;
-}
-
-.fullscreen {
-display: block;
-margin: 15px auto;
-padding: 12px 20px;
-background: #009dff;
-border: none;
-border-radius: 10px;
-color: white;
-font-size: 16px;
-cursor: pointer;
-}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#eee;font-family:Arial,Helvetica,sans-serif;overflow:hidden}body{overscroll-behavior:none}#game{position:fixed;inset:0;width:100%;height:100dvh;background:#000}#setup{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center;padding:22px}#setup .panel{width:min(100%,370px);text-align:center}#setup h1{font-size:18px;font-weight:600;margin:0 0 12px}#setup p{font-size:13px;line-height:1.5;color:#aaa;margin:0 0 20px}#rom{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.pick{display:block;background:#252525;border:1px solid #555;border-radius:8px;padding:15px;color:white;cursor:pointer;font-size:15px}#status{margin-top:14px;color:#aaa;font-size:12px;min-height:16px}#setup.hidden{display:none}#game canvas{touch-action:none}
 </style>
 </head>
-
 <body>
-
-<div class="console">
-<img
-class="visual"
-src="../imagens/visual.png"
-alt="Console Criaverse3D Games"
->
-
 <div id="game"></div>
+<div id="setup">
+ <div class="panel">
+  <h1>Nintendo 64</h1>
+  <p>Escolha uma ROM sua para jogar. O arquivo permanece no seu dispositivo e não é enviado ao site.</p>
+  <label class="pick" for="rom">Escolher jogo (.z64, .n64, .v64)</label>
+  <input id="rom" type="file" accept=".z64,.n64,.v64,application/octet-stream">
+  <div id="status"></div>
+ </div>
 </div>
-
-<button class="fullscreen" onclick="abrirTelaCheia()">
-⛶ Tela cheia
-</button>
-
 <script>
-window.EJS_player = "#game";
-window.EJS_core = "n64";
-window.EJS_gameUrl = "../roms/Pokemon%20Snap%%20%28%29%20%5B%21%5D.z64";
-window.EJS_gameName = "Jogo 1";
-window.EJS_pathtodata =
-"https://cdn.emulatorjs.org/stable/data/";
-window.EJS_startOnLoaded = true;
-
-function abrirTelaCheia() {
-const jogo = document.getElementById("game");
-
-if (jogo.requestFullscreen) {
-jogo.requestFullscreen().catch(() => {
-alert("Use o botão de tela cheia do emulador.");
-});
-}
-}
+(function(){
+ const input=document.getElementById('rom');
+ const setup=document.getElementById('setup');
+ const status=document.getElementById('status');
+ let started=false;
+ input.addEventListener('change',function(){
+   const file=input.files&&input.files[0];
+   if(!file||started)return;
+   if(!/\.(z64|n64|v64)$/i.test(file.name)){status.textContent='Selecione um arquivo de Nintendo 64 (.z64, .n64 ou .v64).';return;}
+   started=true;
+   window.EJS_player='#game';
+   window.EJS_core='n64';
+   window.EJS_gameUrl=URL.createObjectURL(file);
+   window.EJS_gameName=file.name.replace(/\.(z64|n64|v64)$/i,'');
+   window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
+   window.EJS_startOnLoaded=true;
+   window.EJS_volume=0.7;
+   // Os controles de toque são fornecidos pelo EmulatorJS, não são uma imagem.
+   setup.classList.add('hidden');
+   const script=document.createElement('script');
+   script.src='https://cdn.emulatorjs.org/stable/data/loader.js';
+   script.onerror=function(){setup.classList.remove('hidden');status.textContent='Não foi possível carregar o EmulatorJS. Verifique a conexão.';started=false;};
+   document.body.appendChild(script);
+ });
+})();
 </script>
-
-<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
-
 </body>
 </html>
