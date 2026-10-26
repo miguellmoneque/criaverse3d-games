@@ -150,8 +150,9 @@ html, body {
     // HUD com setinhas controlando o analógico do N64
 
 
+
 window.EJS_VirtualGamepadSettings = [
-  // Setinhas: manter o movimento do Mario
+  // Setinhas — movimentação do Mario preservada
   {
     type: "dpad",
     location: "left",
@@ -161,7 +162,7 @@ window.EJS_VirtualGamepadSettings = [
     inputValues: [19, 18, 17, 16]
   },
 
-  // ESC e DIR: faixa superior dos controles
+  // ESC e DIR — faixa preta abaixo do jogo
   {
     type: "button",
     text: "ESC",
@@ -183,25 +184,35 @@ window.EJS_VirtualGamepadSettings = [
     input_value: 11
   },
 
-  // X, Y, B e A: agrupados à direita
+  // Quatro botões compactos à direita
   {
     type: "button",
     text: "X",
     id: "x",
     location: "right",
-    left: 58,
-    top: 5,
-    fontSize: 16,
+    left: 34,
+    top: 10,
+    fontSize: 13,
     input_value: 9
+  },
+  {
+    type: "button",
+    text: "A",
+    id: "a",
+    location: "right",
+    left: 92,
+    top: 10,
+    fontSize: 13,
+    input_value: 8
   },
   {
     type: "button",
     text: "Y",
     id: "y",
     location: "right",
-    left: 5,
-    top: 55,
-    fontSize: 16,
+    left: 34,
+    top: 68,
+    fontSize: 13,
     input_value: 1
   },
   {
@@ -209,20 +220,10 @@ window.EJS_VirtualGamepadSettings = [
     text: "B",
     id: "b",
     location: "right",
-    left: 58,
-    top: 105,
-    fontSize: 16,
+    left: 92,
+    top: 68,
+    fontSize: 13,
     input_value: 0
-  },
-  {
-    type: "button",
-    text: "A",
-    id: "a",
-    location: "right",
-    left: 111,
-    top: 55,
-    fontSize: 16,
-    input_value: 8
   },
 
   // Select e Start lado a lado
@@ -231,8 +232,7 @@ window.EJS_VirtualGamepadSettings = [
     text: "Select",
     id: "select",
     location: "center",
-    left: -40,
-    top: 95,
+    left: -5,
     fontSize: 12,
     block: true,
     input_value: 2
@@ -242,8 +242,7 @@ window.EJS_VirtualGamepadSettings = [
     text: "Start",
     id: "start",
     location: "center",
-    left: 40,
-    top: 95,
+    left: 65,
     fontSize: 12,
     block: true,
     input_value: 3
@@ -255,9 +254,9 @@ window.EJS_VirtualGamepadSettings = [
     text: "Rápido",
     id: "rapido",
     location: "center",
-    left: -80,
-    top: 155,
-    fontSize: 12,
+    left: -105,
+    top: 65,
+    fontSize: 11,
     block: true,
     input_value: 27
   },
@@ -266,13 +265,14 @@ window.EJS_VirtualGamepadSettings = [
     text: "Lento",
     id: "lento",
     location: "center",
-    left: 80,
-    top: 155,
-    fontSize: 12,
+    left: 105,
+    top: 65,
+    fontSize: 11,
     block: true,
     input_value: 29
   }
 ];
+
 
 
 
