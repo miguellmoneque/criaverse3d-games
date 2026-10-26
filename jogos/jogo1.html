@@ -1,51 +1,170 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Criaverse3D — Nintendo 64</title>
+<title>Criaverse3D Games</title>
+
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:#000;color:#eee;font-family:Arial,Helvetica,sans-serif;overflow:hidden}body{overscroll-behavior:none}#game{position:fixed;inset:0;width:100%;height:100dvh;background:#000}#setup{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center;padding:22px}#setup .panel{width:min(100%,370px);text-align:center}#setup h1{font-size:18px;font-weight:600;margin:0 0 12px}#setup p{font-size:13px;line-height:1.5;color:#aaa;margin:0 0 20px}#rom{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.pick{display:block;background:#252525;border:1px solid #555;border-radius:8px;padding:15px;color:white;cursor:pointer;font-size:15px}#status{margin-top:14px;color:#aaa;font-size:12px;min-height:16px}#setup.hidden{display:none}#game canvas{touch-action:none}
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+#game {
+  width: 100%;
+  height: 100dvh;
+  background: #000;
+}
+
+#setup {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #000;
+}
+
+.panel {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.panel h2 {
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.panel p {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pick {
+  display: block;
+  padding: 15px;
+  margin-top: 22px;
+  background: #242424;
+  border: 1px solid #777;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+#rom {
+  display: none;
+}
+
+#status {
+  margin-top: 15px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* Ajustes visuais dos controles do EmulatorJS */
+.ejs_virtualGamepad_button,
+.ejs_virtualGamepad_dpad {
+  opacity: 0.75;
+}
+
+@media (orientation: portrait) {
+  #game {
+    width: 100vw;
+    height: 100dvh;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <div id="game"></div>
+
 <div id="setup">
- <div class="panel">
-  <h1>Nintendo 64</h1>
-  <p>Escolha uma ROM sua para jogar. O arquivo permanece no seu dispositivo e não é enviado ao site.</p>
-  <label class="pick" for="rom">Escolher jogo (.z64, .n64, .v64)</label>
-  <input id="rom" type="file" accept=".z64,.n64,.v64,application/octet-stream">
-  <div id="status"></div>
- </div>
+  <div class="panel">
+    <h2>Nintendo 64</h2>
+    <p>Selecione seu arquivo de jogo para iniciar.</p>
+
+    <label class="pick" for="rom">
+      Escolher jogo
+    </label>
+
+    <input
+      id="rom"
+      type="file"
+      accept=".z64,.n64,.v64,application/octet-stream"
+    >
+
+    <div id="status"></div>
+  </div>
 </div>
+
 <script>
-(function(){
- const input=document.getElementById('rom');
- const setup=document.getElementById('setup');
- const status=document.getElementById('status');
- let started=false;
- input.addEventListener('change',function(){
-   const file=input.files&&input.files[0];
-   if(!file||started)return;
-   if(!/\.(z64|n64|v64)$/i.test(file.name)){status.textContent='Selecione um arquivo de Nintendo 64 (.z64, .n64 ou .v64).';return;}
-   started=true;
-   window.EJS_player='#game';
-   window.EJS_core='n64';
-   window.EJS_gameUrl=URL.createObjectURL(file);
-   window.EJS_gameName=file.name.replace(/\.(z64|n64|v64)$/i,'');
-   window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
-   window.EJS_startOnLoaded=true;
-   window.EJS_volume=0.7;
-   // Os controles de toque são fornecidos pelo EmulatorJS, não são uma imagem.
-   setup.classList.add('hidden');
-   const script=document.createElement('script');
-   script.src='https://cdn.emulatorjs.org/stable/data/loader.js';
-   script.onerror=function(){setup.classList.remove('hidden');status.textContent='Não foi possível carregar o EmulatorJS. Verifique a conexão.';started=false;};
-   document.body.appendChild(script);
- });
+(function () {
+  const input = document.getElementById("rom");
+  const setup = document.getElementById("setup");
+  const status = document.getElementById("status");
+
+  let started = false;
+
+  input.addEventListener("change", function () {
+    const file = input.files && input.files[0];
+
+    if (!file || started) return;
+
+    if (!/\.(z64|n64|v64)$/i.test(file.name)) {
+      status.textContent =
+        "Selecione um arquivo .z64, .n64 ou .v64.";
+      return;
+    }
+
+    started = true;
+
+    window.EJS_player = "#game";
+    window.EJS_core = "n64";
+    window.EJS_gameUrl = URL.createObjectURL(file);
+    window.EJS_gameName =
+      file.name.replace(/\.(z64|n64|v64)$/i, "");
+
+    window.EJS_pathtodata =
+      "https://cdn.emulatorjs.org/stable/data/";
+
+    window.EJS_startOnLoaded = true;
+    window.EJS_volume = 0.7;
+
+    setup.style.display = "none";
+
+    const script = document.createElement("script");
+
+    script.src =
+      "https://cdn.emulatorjs.org/stable/data/loader.js";
+
+    script.onerror = function () {
+      started = false;
+      setup.style.display = "flex";
+      status.textContent =
+        "Erro ao carregar o emulador.";
+    };
+
+    document.body.appendChild(script);
+  });
 })();
 </script>
+
 </body>
 </html>
