@@ -146,6 +146,61 @@ html, body {
 
     window.EJS_startOnLoaded = true;
     window.EJS_volume = 0.7;
+    
+    // HUD com setinhas controlando o analógico do N64
+    window.EJS_VirtualGamepadSettings = [
+      {
+        type: "dpad",
+        location: "left",
+        left: "50%",
+        right: "50%",
+        joystickInput: true,
+        inputValues: [19, 18, 17, 16]
+      },
+      {
+        type: "button",
+        text: "A",
+        id: "botao-a",
+        location: "right",
+        left: 40,
+        top: 80,
+        bold: true,
+        fontSize: 20,
+        input_value: 8
+      },
+      {
+        type: "button",
+        text: "B",
+        id: "botao-b",
+        location: "right",
+        left: 100,
+        top: 20,
+        bold: true,
+        fontSize: 20,
+        input_value: 0
+      },
+      {
+        type: "button",
+        text: "Z",
+        id: "botao-z",
+        location: "left",
+        left: 20,
+        top: 15,
+        fontSize: 16,
+        input_value: 12
+      },
+      {
+        type: "button",
+        text: "Start",
+        id: "botao-start",
+        location: "center",
+        left: 0,
+        fontSize: 15,
+        block: true,
+        input_value: 3
+      }
+    ];
+
 
     setup.style.display = "none";
 
