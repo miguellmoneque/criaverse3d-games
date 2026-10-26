@@ -148,58 +148,129 @@ html, body {
     window.EJS_volume = 0.7;
     
     // HUD com setinhas controlando o analógico do N64
-    window.EJS_VirtualGamepadSettings = [
-      {
-        type: "dpad",
-        location: "left",
-        left: "50%",
-        right: "50%",
-        joystickInput: true,
-        inputValues: [19, 18, 17, 16]
-      },
-      {
-        type: "button",
-        text: "A",
-        id: "botao-a",
-        location: "right",
-        left: 40,
-        top: 80,
-        bold: true,
-        fontSize: 20,
-        input_value: 8
-      },
-      {
-        type: "button",
-        text: "B",
-        id: "botao-b",
-        location: "right",
-        left: 100,
-        top: 20,
-        bold: true,
-        fontSize: 20,
-        input_value: 0
-      },
-      {
-        type: "button",
-        text: "Z",
-        id: "botao-z",
-        location: "left",
-        left: 20,
-        top: 15,
-        fontSize: 16,
-        input_value: 12
-      },
-      {
-        type: "button",
-        text: "Start",
-        id: "botao-start",
-        location: "center",
-        left: 0,
-        fontSize: 15,
-        block: true,
-        input_value: 3
-      }
-    ];
+
+window.EJS_VirtualGamepadSettings = [
+  // Setinhas que movimentam o Mario
+  {
+    type: "dpad",
+    location: "left",
+    left: "50%",
+    right: "50%",
+    joystickInput: true,
+    inputValues: [19, 18, 17, 16]
+  },
+
+  // Botões superiores
+  {
+    type: "button",
+    text: "ESC",
+    id: "esc",
+    location: "left",
+    left: 15,
+    top: 15,
+    fontSize: 13,
+    input_value: 10
+  },
+  {
+    type: "button",
+    text: "DIR",
+    id: "dir",
+    location: "right",
+    right: 15,
+    top: 15,
+    fontSize: 13,
+    input_value: 11
+  },
+
+  // Botões à direita
+  {
+    type: "button",
+    text: "X",
+    id: "x",
+    location: "right",
+    left: 85,
+    top: 10,
+    fontSize: 17,
+    input_value: 9
+  },
+  {
+    type: "button",
+    text: "Y",
+    id: "y",
+    location: "right",
+    left: 145,
+    top: 65,
+    fontSize: 17,
+    input_value: 1
+  },
+  {
+    type: "button",
+    text: "B",
+    id: "b",
+    location: "right",
+    left: 25,
+    top: 65,
+    fontSize: 17,
+    input_value: 0
+  },
+  {
+    type: "button",
+    text: "A",
+    id: "a",
+    location: "right",
+    left: 85,
+    top: 120,
+    fontSize: 17,
+    input_value: 8
+  },
+
+  // Botões centrais
+  {
+    type: "button",
+    text: "Select",
+    id: "select",
+    location: "center",
+    left: -65,
+    fontSize: 13,
+    block: true,
+    input_value: 2
+  },
+  {
+    type: "button",
+    text: "Start",
+    id: "start",
+    location: "center",
+    left: 65,
+    fontSize: 13,
+    block: true,
+    input_value: 3
+  },
+
+  // Velocidade
+  {
+    type: "button",
+    text: "Rápido",
+    id: "rapido",
+    location: "left",
+    left: 70,
+    bottom: 10,
+    fontSize: 12,
+    block: true,
+    input_value: 27
+  },
+  {
+    type: "button",
+    text: "Lento",
+    id: "lento",
+    location: "right",
+    right: 70,
+    bottom: 10,
+    fontSize: 12,
+    block: true,
+    input_value: 29
+  }
+];
+
 
 
     setup.style.display = "none";
