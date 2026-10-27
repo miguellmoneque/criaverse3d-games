@@ -307,6 +307,30 @@ window.EJS_VirtualGamepadSettings = [
     document.body.appendChild(script);
   });
 })();
+  // Diminuir os quatro botões quando o EmulatorJS os criar
+const ajustarBotoes = () => {
+  const botoes = document.querySelectorAll(
+    ".ejs_virtualGamepad_button.cs_n64_b_x, " +
+    ".ejs_virtualGamepad_button.cs_n64_b_y, " +
+    ".ejs_virtualGamepad_button.cs_n64_b_a, " +
+    ".ejs_virtualGamepad_button.cs_n64_b_b"
+  );
+
+  botoes.forEach(botao => {
+    botao.style.setProperty("width", "38px", "important");
+    botao.style.setProperty("height", "38px", "important");
+    botao.style.setProperty("line-height", "38px", "important");
+  });
+};
+
+// Observar quando os controles forem adicionados à página
+const observadorBotoes = new MutationObserver(ajustarBotoes);
+observadorBotoes.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+ajustarBotoes();
 </script>
 
 </body>
