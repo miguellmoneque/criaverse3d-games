@@ -88,15 +88,18 @@ html, body {
     height: 100dvh;
   }
 }
-/* Botões X, Y, A e B menores */
-.ejs_virtualGamepad_right .ejs_virtualGamepad_button.cs_n64_b_x,
-.ejs_virtualGamepad_right .ejs_virtualGamepad_button.cs_n64_b_y,
-.ejs_virtualGamepad_right .ejs_virtualGamepad_button.cs_n64_b_a,
-.ejs_virtualGamepad_right .ejs_virtualGamepad_button.cs_n64_b_b {
+/* Reduzir X, Y, A e B */
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_x,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_y,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_a,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_b {
     width: 38px !important;
     height: 38px !important;
     line-height: 38px !important;
-    padding: 0 !important;
 }
 }
 </style>
