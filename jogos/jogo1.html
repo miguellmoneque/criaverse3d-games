@@ -142,6 +142,28 @@ html, body {
 </div>
 
 <script>
+  /* Evitar abertura acidental do menu ao tocar em áreas vazias */
+function protegerAreasVazias() {
+  document.querySelectorAll(
+    ".ejs_virtualGamepad_left, .ejs_virtualGamepad_right"
+  ).forEach(area => {
+    if (area.dataset.protecaoMenu === "1") return;
+    area.dataset.protecaoMenu = "1";
+
+    area.addEventListener("touchstart", evento => {
+      if (!evento.target.closest(".ejs_virtualGamepad_button")) {
+        evento.preventDefault();
+      }
+    }, { passive: false });
+  });
+}
+
+new MutationObserver(protegerAreasVazias).observe(
+  document.body,
+  { childList: true, subtree: true }
+);
+
+protegerAreasVazias();
 (function () {
   const input = document.getElementById("rom");
   const setup = document.getElementById("setup");
