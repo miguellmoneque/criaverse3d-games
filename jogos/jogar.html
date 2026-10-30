@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Criaverse3D Games — Emulador Universal N64</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+#game {
+  width: 100%;
+  height: 100dvh;
+  background: #000;
+}
+
+#setup {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #000;
+}
+
+.panel {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.panel h2 {
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.panel p {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pick {
+  display: block;
+  padding: 15px;
+  margin-top: 22px;
+  background: #242424;
+  border: 1px solid #777;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+#rom {
+  display: none;
+}
+
+#status {
+  margin-top: 15px;
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* Ajustes visuais dos controles do EmulatorJS */
+.ejs_virtualGamepad_button,
+.ejs_virtualGamepad_dpad {
+  opacity: 0.75;
+}
+
+@media (orientation: portrait) {
+  #game {
+    width: 100vw;
+    height: 100dvh;
+  }
+}
+/* Tamanho único dos quatro botões do N64 */
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_x,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_y,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_a,
+.ejs_virtualGamepad_parent .ejs_virtualGamepad_right
+.ejs_virtualGamepad_button.cs_n64_b_b {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+}
+/* Letras e bordas mais destacadas */
+.ejs_virtualGamepad_right .ejs_virtualGamepad_button {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+}
+/* Subir todos os controles sem alterar os comandos */
+@media (orientation: portrait) {
+  .ejs_virtualGamepad_parent {
+    transform: translateY(-45px) !important;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game"></div>
+
+<div id="setup">
+  <div class="panel">
+    
+  
+
+    <label class="pick" for="rom">
+      Escolher jogo
+    </label>
+
+    <input
+      id="rom"
+      type="file"
+      accept=".z64,.n64,.v64,application/octet-stream"
+    >
+
+    <div id="status" role="status"></div>
+  </div>
+</div>
+
+<script>
+  /* Evitar abertura acidental do menu ao tocar em áreas vazias */
+function protegerAreasVazias() {
+  document.querySelectorAll(
+    ".ejs_virtualGamepad_left, .ejs_virtualGamepad_right"
+  ).forEach(area => {
+    if (area.dataset.protecaoMenu === "1") return;
+    area.dataset.protecaoMenu = "1";
+
+    area.addEventListener("touchstart", evento => {
+      if (!evento.target.closest(".ejs_virtualGamepad_button")) {
+        evento.preventDefault();
+      }
+    }, { passive: false });
+  });
+}
+
+new MutationObserver(protegerAreasVazias).observe(
+  document.body,
+  { childList: true, subtree: true }
+);
+
+protegerAreasVazias();
+(function () {
+  const input = document.getElementById("rom");
+  const setup = document.getElementById("setup");
+  const status = document.getElementById("status");
+
+  let started = false;
+
+  // Identificadores do catálogo privado. Não inclui nem publica ROMs.
+  const catalogo = {"n64-001":{"titulo":"GoldenEye 007","arquivo":"GoldenEye 007 (U) [!].z64"},"n64-002":{"titulo":"A Bug_s Life","arquivo":"A Bug_s Life (U) [!].z64"},"n64-003":{"titulo":"Aerofighter_s Assault","arquivo":"Aerofighter_s Assault (U) [!].z64"},"n64-004":{"titulo":"AeroGauge","arquivo":"AeroGauge (U) [!].z64"},"n64-005":{"titulo":"Aidyn Chronicles - The First Mage","arquivo":"Aidyn Chronicles - The First Mage (U) [!].z64"},"n64-006":{"titulo":"All Star Tennis 99","arquivo":"All Star Tennis 99 (U) (!).n64"},"n64-007":{"titulo":"All-Star Baseball 2000","arquivo":"All-Star Baseball 2000 (U) [!].z64"},"n64-008":{"titulo":"All-Star Baseball 2001","arquivo":"All-Star Baseball 2001 (U) [!].z64"},"n64-009":{"titulo":"All-Star Baseball 99","arquivo":"All-Star Baseball 99 (U) [!].z64"},"n64-010":{"titulo":"Armorines - Project S.W.A.R.M.","arquivo":"Armorines - Project S.W.A.R.M. (U) [!].z64"},"n64-011":{"titulo":"Army Men - Air Combat","arquivo":"Army Men - Air Combat (U) [!].z64"},"n64-012":{"titulo":"Army Men - Sarge_s Heroes","arquivo":"Army Men - Sarge_s Heroes (U) [!].z64"},"n64-013":{"titulo":"Army Men - Sarge_s Heroes 2","arquivo":"Army Men - Sarge_s Heroes 2 (U) [!].z64"},"n64-014":{"titulo":"Asteroids Hyper 64","arquivo":"Asteroids Hyper 64 (U) [!].z64"},"n64-015":{"titulo":"Automobili Lamborghini","arquivo":"Automobili Lamborghini (U) [!].z64"},"n64-016":{"titulo":"Banjo-Kazooie","arquivo":"Banjo-Kazooie (U) [!].z64"},"n64-017":{"titulo":"Banjo-Tooie","arquivo":"Banjo-Tooie (U) [!].z64"},"n64-018":{"titulo":"Bassmasters 2000","arquivo":"Bassmasters 2000 (U) (!).n64"},"n64-019":{"titulo":"Batman Beyond - Return of the Joker","arquivo":"Batman Beyond - Return of the Joker (U) [!].z64"},"n64-020":{"titulo":"BattleTanx","arquivo":"BattleTanx (U) [!].z64"},"n64-021":{"titulo":"BattleTanx - Global Assault","arquivo":"BattleTanx - Global Assault (U) (!).n64"},"n64-022":{"titulo":"Battlezone - Rise of the Black Dogs","arquivo":"Battlezone - Rise of the Black Dogs (U) (!).n64"},"n64-023":{"titulo":"Beetle Adventure Racing!","arquivo":"Beetle Adventure Racing! (U) [!].z64"},"n64-024":{"titulo":"Big Mountain 2000","arquivo":"Big Mountain 2000 (U) [!].z64"},"n64-025":{"titulo":"Bio F.R.E.A.K.S.","arquivo":"Bio F.R.E.A.K.S. (U) [!].z64"},"n64-026":{"titulo":"Blast Corps","arquivo":"Blast Corps (U) (V1.1) [!].z64"},"n64-027":{"titulo":"Blues Brothers 2000","arquivo":"Blues Brothers 2000 (U) [!].z64"},"n64-028":{"titulo":"Body Harvest","arquivo":"Body Harvest (U) [!].z64"},"n64-029":{"titulo":"Bomberman 64","arquivo":"Bomberman 64 (U) [!].z64"},"n64-030":{"titulo":"Bomberman 64 - The Second Attack!","arquivo":"Bomberman 64 - The Second Attack! (U) [!].z64"},"n64-031":{"titulo":"Bomberman Hero","arquivo":"Bomberman Hero (U) [!].z64"},"n64-032":{"titulo":"Bottom of the 9th","arquivo":"Bottom of the 9th (U) (!).n64"},"n64-033":{"titulo":"Brunswick Circuit Pro Bowling","arquivo":"Brunswick Circuit Pro Bowling (U) [!].z64"},"n64-034":{"titulo":"Buck Bumble","arquivo":"Buck Bumble (U) [!].z64"},"n64-035":{"titulo":"Bust-A-Move 2 - Arcade Edition","arquivo":"Bust-A-Move 2 - Arcade Edition (U) [!].z64"},"n64-036":{"titulo":"Bust-A-Move _99","arquivo":"Bust-A-Move _99 (U) [!].z64"},"n64-037":{"titulo":"California Speed","arquivo":"California Speed (U) [!].z64"},"n64-038":{"titulo":"Carmageddon 64","arquivo":"Carmageddon 64 (U) [!].z64"},"n64-039":{"titulo":"Castlevania - Legacy of Darkness","arquivo":"Castlevania - Legacy of Darkness (U) [!].z64"},"n64-040":{"titulo":"Chameleon Twist","arquivo":"Chameleon Twist (U) (!).n64"},"n64-041":{"titulo":"Chameleon Twist 2","arquivo":"Chameleon Twist 2 (U) (!).n64"},"n64-042":{"titulo":"Charlie Blast_s Territory","arquivo":"Charlie Blast_s Territory (U) [!].z64"},"n64-043":{"titulo":"Chopper Attack","arquivo":"Chopper Attack (U) [!].z64"},"n64-044":{"titulo":"Clay Fighter - Sculptor_s Cut","arquivo":"Clay Fighter - Sculptor_s Cut (U) [!].z64"},"n64-045":{"titulo":"Clay Fighter 63 1-3","arquivo":"Clay Fighter 63 1-3 (U) [!].z64"},"n64-046":{"titulo":"Command & Conquer","arquivo":"Command & Conquer (U) [!].z64"},"n64-047":{"titulo":"Conker_s Bad Fur Day","arquivo":"Conker_s Bad Fur Day (U) [!].z64"},"n64-048":{"titulo":"Cruis_n Exotica","arquivo":"Cruis_n Exotica (U) [!].z64"},"n64-049":{"titulo":"Cruis_n USA","arquivo":"Cruis_n USA (U) (V1.2) [!].z64"},"n64-050":{"titulo":"Cruis_n World","arquivo":"Cruis_n World (U) [!].z64"},"n64-051":{"titulo":"CyberTiger","arquivo":"CyberTiger (U) [!].z64"},"n64-052":{"titulo":"Dark Rift","arquivo":"Dark Rift (U) [!].z64"},"n64-053":{"titulo":"Deadly Arts","arquivo":"Deadly Arts (U) [!].z64"},"n64-054":{"titulo":"Destruction Derby 64","arquivo":"Destruction Derby 64 (U) (!).n64"},"n64-055":{"titulo":"Diddy Kong Racing","arquivo":"Diddy Kong Racing (U) (M2) (V1.1) [!].z64"},"n64-056":{"titulo":"Disney_s Donald Duck - Goin_ Quackers","arquivo":"Disney_s Donald Duck - Goin_ Quackers (U) [!].z64"},"n64-057":{"titulo":"Disney_s Tarzan","arquivo":"Disney_s Tarzan (U) [!].z64"},"n64-058":{"titulo":"Donkey Kong 64","arquivo":"Donkey Kong 64 (U) [!].z64"},"n64-059":{"titulo":"Doom 64","arquivo":"Doom 64 (U) [!].z64"},"n64-060":{"titulo":"Dr. Mario 64","arquivo":"Dr. Mario 64 (U) [!].z64"},"n64-061":{"titulo":"Dual Heroes","arquivo":"Dual Heroes (U) [!].z64"},"n64-062":{"titulo":"Duck Dodgers Starring Daffy Duck","arquivo":"Duck Dodgers Starring Daffy Duck (U) [!].z64"},"n64-063":{"titulo":"Duke Nukem 64","arquivo":"Duke Nukem 64 (U) [!].z64"},"n64-064":{"titulo":"Earthworm Jim 3D","arquivo":"Earthworm Jim 3D (U) [!].z64"},"n64-065":{"titulo":"ECW Hardcore Revolution","arquivo":"ECW Hardcore Revolution (U) [!].z64"},"n64-066":{"titulo":"Elmo_s Letter Adventure","arquivo":"Elmo_s Letter Adventure (U) [!].z64"},"n64-067":{"titulo":"Elmo_s Number Journey","arquivo":"Elmo_s Number Journey (U) [!].z64"},"n64-068":{"titulo":"Excitebike 64","arquivo":"Excitebike 64 (U) (!).n64"},"n64-069":{"titulo":"Extreme-G","arquivo":"Extreme-G (U) [!].z64"},"n64-070":{"titulo":"Extreme-G XG2","arquivo":"Extreme-G XG2 (U) [!].z64"},"n64-071":{"titulo":"F-1 Pole Position 64","arquivo":"F-1 Pole Position 64 (U) [!].z64"},"n64-072":{"titulo":"F-1 World Grand Prix","arquivo":"F-1 World Grand Prix (U) [!].z64"},"n64-073":{"titulo":"F-Zero X","arquivo":"F-Zero X (U) [!].z64"},"n64-074":{"titulo":"F1_World_Grand_Prix2","arquivo":"F1_World_Grand_Prix2(E).v64"},"n64-075":{"titulo":"FIFA - Road to World Cup 98","arquivo":"FIFA - Road to World Cup 98 (U) [!].z64"},"n64-076":{"titulo":"FIFA 99","arquivo":"FIFA 99 (U) [!].z64"},"n64-077":{"titulo":"FIFA Soccer 64","arquivo":"FIFA Soccer 64 (U) (M3) [!].z64"},"n64-078":{"titulo":"Fighter_s Destiny","arquivo":"Fighter_s Destiny (U) [!].z64"},"n64-079":{"titulo":"Fighter_s Destiny 2","arquivo":"Fighter_s Destiny 2 (U) [!].z64"},"n64-080":{"titulo":"Fighting Force 64","arquivo":"Fighting Force 64 (U) [!].z64"},"n64-081":{"titulo":"Flying Dragon","arquivo":"Flying Dragon (U) [!].z64"},"n64-082":{"titulo":"Forsaken 64","arquivo":"Forsaken 64 (U) [!].z64"},"n64-083":{"titulo":"Fox Sports College Hoops _99","arquivo":"Fox Sports College Hoops _99 (U) [!].z64"},"n64-084":{"titulo":"Gauntlet Legends","arquivo":"Gauntlet Legends (U) (!).n64"},"n64-085":{"titulo":"Gex 3 - Deep Cover Gecko","arquivo":"Gex 3 - Deep Cover Gecko (U) [!].z64"},"n64-086":{"titulo":"Gex 64 - Enter the Gecko","arquivo":"Gex 64 - Enter the Gecko (U) (!).n64"},"n64-087":{"titulo":"Glover","arquivo":"Glover (U) [!].z64"},"n64-088":{"titulo":"Goemon_s Great Adventure","arquivo":"Goemon_s Great Adventure (U) [!].z64"},"n64-089":{"titulo":"Golden Nugget 64","arquivo":"Golden Nugget 64 (U) [!].z64"},"n64-090":{"titulo":"GT 64 Championship Edition","arquivo":"GT 64 Championship Edition (U) [!].z64"},"n64-091":{"titulo":"Harvest Moon 64","arquivo":"Harvest Moon 64 (U) [!].z64"},"n64-092":{"titulo":"Hercules - The Legendary Journeys","arquivo":"Hercules - The Legendary Journeys (U) [!].z64"},"n64-093":{"titulo":"Hexen","arquivo":"Hexen (U) [!].z64"},"n64-094":{"titulo":"Hey You, Pikachu!","arquivo":"Hey You, Pikachu! (U) [!].z64"},"n64-095":{"titulo":"Hot Wheels Turbo Racing","arquivo":"Hot Wheels Turbo Racing (U) [!].z64"},"n64-096":{"titulo":"Hybrid Heaven","arquivo":"Hybrid Heaven (U) [!].z64"},"n64-097":{"titulo":"Hydro Thunder","arquivo":"Hydro Thunder (U) [!].z64"},"n64-098":{"titulo":"In-Fisherman Bass Hunter 64","arquivo":"In-Fisherman Bass Hunter 64 (U) [!].z64"},"n64-099":{"titulo":"Indiana Jones and the Infernal Machine","arquivo":"Indiana Jones and the Infernal Machine (U) [!].z64"},"n64-100":{"titulo":"Indy Racing 2000","arquivo":"Indy Racing 2000 (U) [!].z64"},"n64-101":{"titulo":"International Superstar Soccer 2000","arquivo":"International Superstar Soccer 2000 (U) [!].z64"},"n64-102":{"titulo":"International Superstar Soccer 64","arquivo":"International Superstar Soccer 64 (U) [!].z64"},"n64-103":{"titulo":"International Superstar Soccer _98","arquivo":"International Superstar Soccer _98 (U) [!].z64"},"n64-104":{"titulo":"International Track and Field 2000","arquivo":"International Track and Field 2000 (U) [!].z64"},"n64-105":{"titulo":"Jeopardy!","arquivo":"Jeopardy! (U) [!].z64"},"n64-106":{"titulo":"Jeremy McGrath Supercross 2000","arquivo":"Jeremy McGrath Supercross 2000 (U) [!].z64"},"n64-107":{"titulo":"Jet Force Gemini","arquivo":"Jet Force Gemini (U) [!].z64"},"n64-108":{"titulo":"John Romero_s Daikatana","arquivo":"John Romero_s Daikatana (U) [!].z64"},"n64-109":{"titulo":"Ken Griffey Jr._s Slugfest","arquivo":"Ken Griffey Jr._s Slugfest (U) [!].z64"},"n64-110":{"titulo":"Killer Instinct Gold","arquivo":"Killer Instinct Gold (U) (V1.2) [!].z64"},"n64-111":{"titulo":"King Hill 64 - Extreme Snowboarding","arquivo":"King Hill 64 - Extreme Snowboarding (J) [!].v64"},"n64-112":{"titulo":"Kirby 64 - The Crystal Shards","arquivo":"Kirby 64 - The Crystal Shards (U) [!].z64"},"n64-113":{"titulo":"Knife Edge - Nose Gunner","arquivo":"Knife Edge - Nose Gunner (U) [!].z64"},"n64-114":{"titulo":"Knockout Kings 2000","arquivo":"Knockout Kings 2000 (U) [!].z64"},"n64-115":{"titulo":"Kobe Bryant_s NBA Courtside","arquivo":"Kobe Bryant_s NBA Courtside (U) [!].z64"},"n64-116":{"titulo":"Legend of Zelda, The - Ocarina of Time","arquivo":"Legend of Zelda, The - Ocarina of Time (U) (V1.2) [!].z64"},"n64-117":{"titulo":"LEGO Racers","arquivo":"LEGO Racers (U) [!].z64"},"n64-118":{"titulo":"Lode Runner 3-D","arquivo":"Lode Runner 3-D (U) (!).n64"},"n64-119":{"titulo":"Mace - The Dark Age","arquivo":"Mace - The Dark Age (U) [!].z64"},"n64-120":{"titulo":"Madden 2000","arquivo":"Madden 2000 (U) [!].z64"},"n64-121":{"titulo":"Madden Football 64","arquivo":"Madden Football 64 (U) [!].z64"},"n64-122":{"titulo":"Madden NFL 2001","arquivo":"Madden NFL 2001 (U) [!].z64"},"n64-123":{"titulo":"Madden NFL 2002","arquivo":"Madden NFL 2002 (U) [!].z64"},"n64-124":{"titulo":"Madden NFL 99","arquivo":"Madden NFL 99 (U) [!].z64"},"n64-125":{"titulo":"Magical Tetris Challenge","arquivo":"Magical Tetris Challenge (U) [!].z64"},"n64-126":{"titulo":"Major League Baseball Featuring Ken Griffey Jr.","arquivo":"Major League Baseball Featuring Ken Griffey Jr. (U) [!].z64"},"n64-127":{"titulo":"Mario Golf","arquivo":"Mario Golf (U) [!].z64"},"n64-128":{"titulo":"Mario Kart 64","arquivo":"Mario Kart 64 (U) [!].z64"},"n64-129":{"titulo":"Mario Party","arquivo":"Mario Party (U) [!].z64"},"n64-130":{"titulo":"Mario Party 2","arquivo":"Mario Party 2 (U) [!].z64"},"n64-131":{"titulo":"Mario Party 3","arquivo":"Mario Party 3 (U) [!].z64"},"n64-132":{"titulo":"Mario Tennis","arquivo":"Mario Tennis (U) [!].z64"},"n64-133":{"titulo":"Mega Man 64","arquivo":"Mega Man 64 (U) [!].z64"},"n64-134":{"titulo":"Mia Hamm Soccer 64","arquivo":"Mia Hamm Soccer 64 (U) [!].z64"},"n64-135":{"titulo":"Michael Owens WLS 2000","arquivo":"Michael Owens WLS 2000 (E).v64"},"n64-136":{"titulo":"Mickey_s Speedway USA","arquivo":"Mickey_s Speedway USA (U) [!].z64"},"n64-137":{"titulo":"Micro Machines 64 Turbo","arquivo":"Micro Machines 64 Turbo (U) [!].z64"},"n64-138":{"titulo":"Midway_s Greatest Arcade Hits Volume 1","arquivo":"Midway_s Greatest Arcade Hits Volume 1 (U) [!].z64"},"n64-139":{"titulo":"Mike Piazza_s Strike Zone","arquivo":"Mike Piazza_s Strike Zone (U) [!].z64"},"n64-140":{"titulo":"Milo_s Astro Lanes","arquivo":"Milo_s Astro Lanes (U) [!].z64"},"n64-141":{"titulo":"Mischief Makers","arquivo":"Mischief Makers (U) [!].z64"},"n64-142":{"titulo":"Mission Impossible","arquivo":"Mission Impossible (U) [!].z64"},"n64-143":{"titulo":"Monaco Grand Prix","arquivo":"Monaco Grand Prix (U) [!].z64"},"n64-144":{"titulo":"Monopoly","arquivo":"Monopoly (U) [!].z64"},"n64-145":{"titulo":"Monster Truck Madness 64","arquivo":"Monster Truck Madness 64 (U) (!).n64"},"n64-146":{"titulo":"Mortal Kombat 4","arquivo":"Mortal Kombat 4 (U) [!].z64"},"n64-147":{"titulo":"Mortal Kombat Trilogy","arquivo":"Mortal Kombat Trilogy (U) (V1.2) [!].z64"},"n64-148":{"titulo":"MRC - Multi Racing Championship","arquivo":"MRC - Multi Racing Championship (U) [!].z64"},"n64-149":{"titulo":"Ms. Pac-Man Maze Madness","arquivo":"Ms. Pac-Man Maze Madness (U) [!].z64"},"n64-150":{"titulo":"Mystical Ninja - Starring Goemon","arquivo":"Mystical Ninja - Starring Goemon (U) [!].z64"},"n64-151":{"titulo":"N64 1080 Snowboarding","arquivo":"N64 1080 Snowboarding (JU).z64"},"n64-152":{"titulo":"Nagano Olympic Hockey _98","arquivo":"Nagano Olympic Hockey _98 (U) [!].z64"},"n64-153":{"titulo":"Nagano Winter Olympics _98","arquivo":"Nagano Winter Olympics _98 (U) [!].z64"},"n64-154":{"titulo":"Namco Museum 64","arquivo":"Namco Museum 64 (U) [!].z64"},"n64-155":{"titulo":"NASCAR 2000","arquivo":"NASCAR 2000 (U) [!].z64"},"n64-156":{"titulo":"NASCAR 99","arquivo":"NASCAR 99 (U) [!].z64"},"n64-157":{"titulo":"NBA Courtside 2 - Featuring Kobe Bryant","arquivo":"NBA Courtside 2 - Featuring Kobe Bryant (U) [!].z64"},"n64-158":{"titulo":"NBA Hangtime","arquivo":"NBA Hangtime (U) [!].z64"},"n64-159":{"titulo":"NBA In the Zone 2000","arquivo":"NBA In the Zone 2000 (U) [!].z64"},"n64-160":{"titulo":"NBA In the Zone _98","arquivo":"NBA In the Zone _98 (U) [!].z64"},"n64-161":{"titulo":"NBA In the Zone _99","arquivo":"NBA In the Zone _99 (U) [!].z64"},"n64-162":{"titulo":"NBA Jam 99","arquivo":"NBA Jam 99 (U) [!].z64"},"n64-163":{"titulo":"NBA Live 2000","arquivo":"NBA Live 2000 (U) [!].z64"},"n64-164":{"titulo":"NBA Live 99","arquivo":"NBA Live 99 (U) [!].z64"},"n64-165":{"titulo":"NBA Showtime - NBA on NBC","arquivo":"NBA Showtime - NBA on NBC (U) [!].z64"},"n64-166":{"titulo":"New Tetris, The","arquivo":"New Tetris, The (U) [!].z64"},"n64-167":{"titulo":"NFL Blitz","arquivo":"NFL Blitz (U) [!].z64"},"n64-168":{"titulo":"NFL Blitz - Special Edition","arquivo":"NFL Blitz - Special Edition (U) [!].z64"},"n64-169":{"titulo":"NFL Blitz 2000","arquivo":"NFL Blitz 2000 (U) [!].z64"},"n64-170":{"titulo":"NFL Blitz 2001","arquivo":"NFL Blitz 2001 (U) [!].z64"},"n64-171":{"titulo":"NFL Quarterback Club 2000","arquivo":"NFL Quarterback Club 2000 (U) [!].z64"},"n64-172":{"titulo":"NFL Quarterback Club 2001","arquivo":"NFL Quarterback Club 2001 (U) [!].z64"},"n64-173":{"titulo":"NFL Quarterback Club 98","arquivo":"NFL Quarterback Club 98 (U) [!].z64"},"n64-174":{"titulo":"NFL Quarterback Club 99","arquivo":"NFL Quarterback Club 99 (U) [!].z64"},"n64-175":{"titulo":"NHL 99","arquivo":"NHL 99 (U) [!].z64"},"n64-176":{"titulo":"NHL Blades of Steel _99","arquivo":"NHL Blades of Steel _99 (U) [!].z64"},"n64-177":{"titulo":"NHL Breakaway 98","arquivo":"NHL Breakaway 98 (U) [!].z64"},"n64-178":{"titulo":"NHL Breakaway 99","arquivo":"NHL Breakaway 99 (U) [!].z64"},"n64-179":{"titulo":"Nightmare Creatures","arquivo":"Nightmare Creatures (U) [!].z64"},"n64-180":{"titulo":"Nuclear Strike 64","arquivo":"Nuclear Strike 64 (U) [!].z64"},"n64-181":{"titulo":"Off Road Challenge","arquivo":"Off Road Challenge (U) [!].z64"},"n64-182":{"titulo":"Ogre Battle 64 - Person of Lordly Caliber","arquivo":"Ogre Battle 64 - Person of Lordly Caliber (U) [!].z64"},"n64-183":{"titulo":"Paper Mario","arquivo":"Paper Mario (U) [!].z64"},"n64-184":{"titulo":"Paperboy","arquivo":"Paperboy (U) [!].z64"},"n64-185":{"titulo":"Penny Racers","arquivo":"Penny Racers (U) [!].z64"},"n64-186":{"titulo":"Perfect Dark","arquivo":"Perfect Dark (U) (V1.1) [!].z64"},"n64-187":{"titulo":"PGA European Tour","arquivo":"PGA European Tour (U) [!].z64"},"n64-188":{"titulo":"Pilotwings 64","arquivo":"Pilotwings 64 (U) [!].z64"},"n64-189":{"titulo":"Pokemon Puzzle League","arquivo":"Pokemon Puzzle League (U) [!].z64"},"n64-190":{"titulo":"Pokemon Stadium","arquivo":"Pokemon Stadium (U) [!].z64"},"n64-191":{"titulo":"Pokemon Stadium 2","arquivo":"Pokemon Stadium 2 (U) [!].z64"},"n64-192":{"titulo":"Pokemon-Snap","arquivo":"Pokemon-Snap.z64"},"n64-193":{"titulo":"Polaris Sno Cross","arquivo":"Polaris Sno Cross (U) [!].z64"},"n64-194":{"titulo":"Power Rangers - Lightspeed Rescue","arquivo":"Power Rangers - Lightspeed Rescue (U) [!].z64"},"n64-195":{"titulo":"Powerpuff Girls, The - Chemical X-traction","arquivo":"Powerpuff Girls, The - Chemical X-traction (U) [!].z64"},"n64-196":{"titulo":"Quake II","arquivo":"Quake II (U) [!].z64"},"n64-197":{"titulo":"Quake 64","arquivo":"Quake 64 (U) [!].z64"},"n64-198":{"titulo":"Quest 64","arquivo":"Quest 64 (U) [!].z64"},"n64-199":{"titulo":"Rally Challenge 2000","arquivo":"Rally Challenge 2000 (U) [!].z64"},"n64-200":{"titulo":"Rampage - World Tour","arquivo":"Rampage - World Tour (U) (!).n64"},"n64-201":{"titulo":"Rampage 2 - Universal Tour","arquivo":"Rampage 2 - Universal Tour (U) [!].z64"},"n64-202":{"titulo":"Rat Attack","arquivo":"Rat Attack (U) [!].z64"},"n64-203":{"titulo":"Rayman 2 - The Great Escape","arquivo":"Rayman 2 - The Great Escape (U) (!).n64"},"n64-204":{"titulo":"Razor Freestyle Scooter","arquivo":"Razor Freestyle Scooter (U) [!].z64"},"n64-205":{"titulo":"Re-Volt","arquivo":"Re-Volt (U) (!).n64"},"n64-206":{"titulo":"Ready 2 Rumble Boxing","arquivo":"Ready 2 Rumble Boxing (U) [!].z64"},"n64-207":{"titulo":"Ready 2 Rumble Boxing Round 2","arquivo":"Ready 2 Rumble Boxing Round 2 (U) [!].z64"},"n64-208":{"titulo":"Resident Evil 2","arquivo":"Resident Evil 2 (U) [!].z64"},"n64-209":{"titulo":"Road Rash 64","arquivo":"Road Rash 64 (U) [!].z64"},"n64-210":{"titulo":"Roadsters","arquivo":"Roadsters (U) [!].z64"},"n64-211":{"titulo":"Robotron 64","arquivo":"Robotron 64 (U) [!].z64"},"n64-212":{"titulo":"Rocket - Robot on Wheels","arquivo":"Rocket - Robot on Wheels (U) [!].z64"},"n64-213":{"titulo":"RR64 - Ridge Racer 64","arquivo":"RR64 - Ridge Racer 64 (U) [!].z64"},"n64-214":{"titulo":"Rugrats - Scavenger Hunt","arquivo":"Rugrats - Scavenger Hunt (U) [!].z64"},"n64-215":{"titulo":"Rugrats in Paris - The Movie","arquivo":"Rugrats in Paris - The Movie (U) [!].z64"},"n64-216":{"titulo":"Rush 2 - Extreme Racing USA","arquivo":"Rush 2 - Extreme Racing USA (U) [!].z64"},"n64-217":{"titulo":"S.C.A.R.S.","arquivo":"S.C.A.R.S. (U) [!].z64"},"n64-218":{"titulo":"San Francisco Rush 2049","arquivo":"San Francisco Rush 2049 (U) [!].z64"},"n64-219":{"titulo":"Scooby-Doo - Classic Creep Capers","arquivo":"Scooby-Doo - Classic Creep Capers (U) [!].z64"},"n64-220":{"titulo":"Shadow Man","arquivo":"Shadow Man (U) [!].z64"},"n64-221":{"titulo":"Shadowgate 64 - Trials of the Four Towers","arquivo":"Shadowgate 64 - Trials of the Four Towers (U) [!].z64"},"n64-222":{"titulo":"Sim City 2000","arquivo":"Sim City 2000 (J) [!].v64"},"n64-223":{"titulo":"Snowboard Kids","arquivo":"Snowboard Kids (U) [!].z64"},"n64-224":{"titulo":"Snowboard Kids 2","arquivo":"Snowboard Kids 2 (U) [!].z64"},"n64-225":{"titulo":"South Park","arquivo":"South Park (U) [!].z64"},"n64-226":{"titulo":"South Park - Chef_s Luv Shack","arquivo":"South Park - Chef_s Luv Shack (U) (!).n64"},"n64-227":{"titulo":"South Park Rally","arquivo":"South Park Rally (U) [!].z64"},"n64-228":{"titulo":"Space Invaders","arquivo":"Space Invaders (U) (!).n64"},"n64-229":{"titulo":"Spacestation Silicon Valley","arquivo":"Spacestation Silicon Valley (U) [!].z64"},"n64-230":{"titulo":"Spider-Man","arquivo":"Spider-Man (U) [!].z64"},"n64-231":{"titulo":"Star Fox 64","arquivo":"Star Fox 64 (U) [!].z64"},"n64-232":{"titulo":"Star Soldier Vanishing Earth","arquivo":"Star Soldier Vanishing Earth (U) [!].z64"},"n64-233":{"titulo":"Star Wars Episode I - Racer","arquivo":"Star Wars Episode I - Racer (U) [!].z64"},"n64-234":{"titulo":"Star Wars - Rogue Squadron","arquivo":"Star Wars - Rogue Squadron (U) (!).n64"},"n64-235":{"titulo":"Star Wars - Shadows of the Empire","arquivo":"Star Wars - Shadows of the Empire (U) (V1.2) [!].z64"},"n64-236":{"titulo":"Star Wars Episode I - Battle for Naboo","arquivo":"Star Wars Episode I - Battle for Naboo (U) [!].z64"},"n64-237":{"titulo":"StarCraft 64","arquivo":"StarCraft 64 (U) [!].z64"},"n64-238":{"titulo":"Starshot - Space Circus Fever","arquivo":"Starshot - Space Circus Fever (U) [!].z64"},"n64-239":{"titulo":"Super Bowling 64","arquivo":"Super Bowling 64 (U) [!].z64"},"n64-240":{"titulo":"Super Mario 64","arquivo":"Super Mario 64 (USA).z64"},"n64-241":{"titulo":"Super Smash Bros.","arquivo":"Super Smash Bros. (U) [!].z64"},"n64-242":{"titulo":"Supercross 2000","arquivo":"Supercross 2000 (U) [!].z64"},"n64-243":{"titulo":"Superman","arquivo":"Superman (U) (M3) [!].z64"},"n64-244":{"titulo":"Tetrisphere","arquivo":"Tetrisphere (U) [!].z64"},"n64-245":{"titulo":"The Legend of Zelda Ocarina of Time Master Quest","arquivo":"The Legend of Zelda Ocarina of Time Master Quest.v64"},"n64-246":{"titulo":"Tigger_s Honey Hunt","arquivo":"Tigger_s Honey Hunt (U) [!].z64"},"n64-247":{"titulo":"Tom and Jerry in Fists of Furry","arquivo":"Tom and Jerry in Fists of Furry (U) [!].z64"},"n64-248":{"titulo":"Tom Clancy_s Rainbow Six","arquivo":"Tom Clancy_s Rainbow Six (U) [!].z64"},"n64-249":{"titulo":"Tonic Trouble","arquivo":"Tonic Trouble (U) (V1.1) [!].z64"},"n64-250":{"titulo":"Tony Hawk_s Pro Skater 2","arquivo":"Tony Hawk_s Pro Skater 2 (U) [!].z64"},"n64-251":{"titulo":"Tony Hawk_s Pro Skater 3","arquivo":"Tony Hawk_s Pro Skater 3 (U).z64"},"n64-252":{"titulo":"Top Gear Hyper-Bike","arquivo":"Top Gear Hyper-Bike (U) (!).n64"},"n64-253":{"titulo":"Top Gear Overdrive","arquivo":"Top Gear Overdrive (U) [!].z64"},"n64-254":{"titulo":"Top Gear Rally","arquivo":"Top Gear Rally (U) [!].z64"},"n64-255":{"titulo":"Top Gear Rally 2","arquivo":"Top Gear Rally 2 (U) [!].z64"},"n64-256":{"titulo":"Toy Story 2","arquivo":"Toy Story 2 (U) [!].z64"},"n64-257":{"titulo":"Transformers - Beast Wars Transmetal","arquivo":"Transformers - Beast Wars Transmetal (U) [!].v64"},"n64-258":{"titulo":"Triple Play 2000","arquivo":"Triple Play 2000 (U) [!].z64"},"n64-259":{"titulo":"Turok - Dinosaur Hunter","arquivo":"Turok - Dinosaur Hunter (U) (V1.2) [!].z64"},"n64-260":{"titulo":"Turok 2 - Seeds of Evil","arquivo":"Turok 2 - Seeds of Evil (U) (!).n64"},"n64-261":{"titulo":"Turok 3 - Shadow of Oblivion","arquivo":"Turok 3 - Shadow of Oblivion (U) [!].n64"},"n64-262":{"titulo":"Twisted Edge Extreme Snowboarding","arquivo":"Twisted Edge Extreme Snowboarding (U) [!].z64"},"n64-263":{"titulo":"V-Rally Edition 99","arquivo":"V-Rally Edition 99 (U) (!).n64"},"n64-264":{"titulo":"Vigilante 8","arquivo":"Vigilante 8 (U) (!).n64"},"n64-265":{"titulo":"Vigilante 8 - 2nd Offense","arquivo":"Vigilante 8 - 2nd Offense (U) [!].v64"},"n64-266":{"titulo":"Virtual Pool 64","arquivo":"Virtual Pool 64 (U) [!].z64"},"n64-267":{"titulo":"Waialae Country Club-True Golf Classics","arquivo":"Waialae Country Club-True Golf Classics (U) [!].z64"},"n64-268":{"titulo":"War Gods","arquivo":"War Gods (U) [!].z64"},"n64-269":{"titulo":"Wave Race 64","arquivo":"Wave Race 64 (U) (V1.1) (!).n64"},"n64-270":{"titulo":"Wayne Gretzky_s 3D Hockey _98","arquivo":"Wayne Gretzky_s 3D Hockey _98 (U) [!].z64"},"n64-271":{"titulo":"WCW Backstage Assault","arquivo":"WCW Backstage Assault (U) [!].z64"},"n64-272":{"titulo":"WCW Mayhem","arquivo":"WCW Mayhem (U) [!].z64"},"n64-273":{"titulo":"WCW vs. nWo - World Tour","arquivo":"WCW vs. nWo - World Tour (U) (V1.1) [!].z64"},"n64-274":{"titulo":"WCW-nWo Revenge","arquivo":"WCW-nWo Revenge (U) [!].z64"},"n64-275":{"titulo":"Wetrix","arquivo":"Wetrix (U) [!].z64"},"n64-276":{"titulo":"Wheel of Fortune","arquivo":"Wheel of Fortune (U) [!].z64"},"n64-277":{"titulo":"WinBack - Covert Operations","arquivo":"WinBack - Covert Operations (U) (!).n64"},"n64-278":{"titulo":"Wipeout 64","arquivo":"Wipeout 64 (U) [!].z64"},"n64-279":{"titulo":"World Cup 98","arquivo":"World Cup 98 (U) [!].z64"},"n64-280":{"titulo":"World Driver Championship","arquivo":"World Driver Championship (U) [!].z64"},"n64-281":{"titulo":"World is Not Enough, The","arquivo":"World is Not Enough, The (U) [!].z64"},"n64-282":{"titulo":"Worms - Armageddon","arquivo":"Worms - Armageddon (U) (!).n64"},"n64-283":{"titulo":"WWF - War Zone","arquivo":"WWF - War Zone (U) [!].z64"},"n64-284":{"titulo":"WWF Attitude","arquivo":"WWF Attitude (U) [!].z64"},"n64-285":{"titulo":"WWF No Mercy","arquivo":"WWF No Mercy (U) [!].z64"},"n64-286":{"titulo":"WWF WrestleMania 2000","arquivo":"WWF WrestleMania 2000 (U) (!).n64"},"n64-287":{"titulo":"Xena Warrior Princess - Talisman of Fate","arquivo":"Xena Warrior Princess - Talisman of Fate (U) [!].z64"},"n64-288":{"titulo":"Yoshi_s Story","arquivo":"Yoshi_s Story (U) [!].z64"}};
+  const jogoId = new URLSearchParams(location.search).get("jogo");
+  const jogo = jogoId && Object.prototype.hasOwnProperty.call(catalogo, jogoId)
+    ? catalogo[jogoId] : null;
+  if (jogoId && !jogo) {
+    status.textContent = "Jogo não encontrado no catálogo. Escolha uma ROM para testar.";
+  } else if (jogo) {
+    status.textContent = "Selecionado: " + jogo.titulo + ". Escolha o arquivo correspondente para jogar.";
+  }
+
+  // Carregamento remoto permitido apenas para IDs explicitamente configurados.
+  const jogosRemotos = {
+    "n64-003": "https://roms.criaverse3d.com.br/criaverse3d-games/Aerofighter_s%20Assault%20%28U%29%20%5B%21%5D.z64"
+  };
+
+  if (jogo && Object.prototype.hasOwnProperty.call(jogosRemotos, jogoId)) {
+    status.textContent = "Carregando " + jogo.titulo + " do Cloudflare R2...";
+    // Conferir CORS e disponibilidade antes de iniciar o emulador.
+    fetch(jogosRemotos[jogoId], { method: "GET" })
+      .then(resposta => {
+        if (!resposta.ok) throw new Error("HTTP " + resposta.status);
+        if (resposta.body) resposta.body.cancel();
+        iniciarJogo(jogosRemotos[jogoId], jogo.titulo);
+      })
+      .catch(erro => {
+        status.textContent = "Não foi possível carregar automaticamente (" + erro.message + "). Escolha a ROM no aparelho.";
+      });
+  }
+
+  input.addEventListener("change", function () {
+    const file = input.files && input.files[0];
+    if (!file || started) return;
+    if (!/\.(z64|n64|v64)$/i.test(file.name)) {
+      status.textContent = "Selecione um arquivo .z64, .n64 ou .v64.";
+      return;
+    }
+    // Em modo NFC de teste, não carregar outro jogo por engano.
+    if (jogo && file.name !== jogo.arquivo) {
+      status.textContent = "Este link é de " + jogo.titulo + ". Selecione: " + jogo.arquivo;
+      input.value = "";
+      return;
+    }
+    iniciarJogo(URL.createObjectURL(file), file.name.replace(/\.(z64|n64|v64)$/i, ""));
+  });
+
+  function iniciarJogo(url, nome) {
+    if (started) return;
+    started = true;
+    window.EJS_player = "#game";
+    window.EJS_core = "n64";
+    window.EJS_gameUrl = url;
+    window.EJS_gameName = nome;
+
+    window.EJS_pathtodata =
+      "https://cdn.emulatorjs.org/stable/data/";
+
+    window.EJS_startOnLoaded = true;
+    window.EJS_volume = 0.7;
+    
+    // HUD com setinhas controlando o analógico do N64
+
+
+
+window.EJS_VirtualGamepadSettings = [
+  // Setinhas — movimentação do Mario preservada
+  {
+    type: "dpad",
+    location: "left",
+    left: "50%",
+    right: "50%",
+    joystickInput: true,
+    inputValues: [19, 18, 17, 16]
+  },
+
+  // ESC e DIR — faixa preta abaixo do jogo
+  {
+    type: "button",
+    text: "ESQ",
+    id: "esc",
+    location: "top",
+    left: 12,
+    top: 8,
+    fontSize: 12,
+    input_value: 10
+  },
+  {
+    type: "button",
+    text: "DIR",
+    id: "dir",
+    location: "top",
+    right: 12,
+    top: 8,
+    fontSize: 12,
+    input_value: 11
+  },
+
+  // Quatro botões compactos à direita
+  {
+    type: "button",
+    text: "X",
+    id: "x",
+    location: "right",
+    left: 35,
+    top: 21,
+    fontSize: 11,
+    input_value: 9
+  },
+  {
+    type: "button",
+    text: "A",
+    id: "a",
+    location: "right",
+    left: 71,
+    top: 57,
+    fontSize: 11,
+    input_value: 8
+  },
+  {
+    type: "button",
+    text: "Y",
+    id: "y",
+    location: "right",
+    left: -1,
+    top: 57,
+    fontSize: 11,
+    input_value: 1
+  },
+  {
+    type: "button",
+    text: "B",
+    id: "b",
+    location: "right",
+    left: 35,
+    top: 93,
+    fontSize: 11,
+    input_value: 0
+  },
+
+  // Select e Start lado a lado
+  {
+    type: "button",
+    text: "Select",
+    id: "select",
+    location: "center",
+    left: -5,
+    top: 0,
+    fontSize: 12,
+    block: true,
+    input_value: 2
+  },
+  {
+    type: "button",
+    text: "Start",
+    id: "start",
+    location: "center",
+    left: 65,
+    top: 0,
+    fontSize: 12,
+    block: true,
+    input_value: 3
+  },
+
+  // Rápido e Lento separados
+  {
+    type: "button",
+    text: "Rápido",
+    id: "rapido",
+    location: "center",
+    left: -35,
+    top: 35,
+    fontSize: 11,
+    block: true,
+    input_value: 27
+  },
+  {
+    type: "button",
+    text: "Lento",
+    id: "lento",
+    location: "center",
+    left: 95,
+    top: 35,
+    fontSize: 11,
+    block: true,
+    input_value: 29
+  }
+];
+
+
+
+
+
+    setup.style.display = "none";
+
+    const script = document.createElement("script");
+
+    script.src =
+      "https://cdn.emulatorjs.org/stable/data/loader.js";
+
+    script.onerror = function () {
+      started = false;
+      setup.style.display = "flex";
+      status.textContent =
+        "Erro ao carregar o emulador.";
+    };
+
+    document.body.appendChild(script);
+  }
+})();
+// Ajustar o tamanho dos botões após o carregamento
+const ajustarBotoes = () => {
+  document.querySelectorAll(
+    ".ejs_virtualGamepad_right .ejs_virtualGamepad_button"
+  ).forEach(botao => {
+    botao.style.setProperty("width", "44px", "important");
+    botao.style.setProperty("height", "44px", "important");
+    botao.style.setProperty("line-height", "44px", "important");
+  });
+};
+
+const observadorBotoes = new MutationObserver(ajustarBotoes);
+
+observadorBotoes.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+ajustarBotoes();
+</script>
+
+</body>
+</html>
